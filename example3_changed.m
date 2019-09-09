@@ -8,17 +8,18 @@ clc;
 
 n_iter = 10000;
 aa = 1.5;
-k=1;
+k= 1;
 A = 2;
 %Nr of grids
 nx=100*k*A; %lines
 ny=140*k;%colums
-
-
-nxa = ceil(nx /2.5); %this is boundary for PosZero in a line
-nxb = ceil(nx/1.67); % this is boundary for PosFinal in line
-nya = ceil(ny/2.4); % this is boundary for PosZero in a row
-nyb = ceil(ny/1.71); % this is boundary for PosFinal in a row
+%Ratio for the H and W
+B = 2.5;
+C = 1.7;
+nxa = ceil(nx /B); %this is boundary for PosZero in a line
+nxb = ceil(nx/C); % this is boundary for PosFinal in line
+nya = ceil(ny/B); % this is boundary for PosZero in a row
+nyb = ceil(ny/C); % this is boundary for PosFinal in a row
 
 %put k constant to follow the grid, these are like measurment probes
 iprobe_x=5*k;
@@ -34,19 +35,23 @@ Eps_r3 = (Eps_r1+Eps_r2)/2;
 
 %Make a eps matrix
 Eps = ones(nx,ny)*Eps_r1;
+
+% þarf að búa til void... með Eps 3 örugglega og svipað og iu með markers
+
 % voltage potentional matrix
 u=0.5*ones(nx,ny);
-% u(nxa:nxb,nya:nyb)=1;
-%  u(:,1) = 0;
-%  u(:,ny) = 0;
- u(1,:) = 0;
+%u(nxa:nxb,nya:nyb)=1;
+ % u(:,1) = 0;
+ % u(:,ny) = 0;
+ u(1,:) = 1;
  u(nx,:)= 0;
 %---------------------------------------------------------------------------------------------------%
                                           %Markers%
 %---------------------------------------------------------------------------------------------------%
 iu=zeros(nx,ny);
-% fylli hann a� innan
-iu(nxa:nxb,nya:nyb)=1;
+% fylli hann að innan
+%iu(nxa:nxb,nya:nyb)= 0;
+
 iu(nxa,nya:nyb) = -1;
 
 iu(nxb,nya:nyb) = -1;
