@@ -9,21 +9,32 @@ clc;
 n_iter = 10000;
 aa = 1.5;
 k= 1;
-A = 2;
+A= 1.5; % Ratio for H and W later
 %Nr of grids
-nx=100*k*A; %lines
+nx=200*k; %lines
 ny=140*k;%colums
 %Ratio for the H and W
-B = 2.5;
-C = 1.7;
-nxa = ceil(nx /B); %this is boundary for PosZero in a line
-nxb = ceil(nx/C); % this is boundary for PosFinal in line
-nya = ceil(ny/B); % this is boundary for PosZero in a row
-nyb = ceil(ny/C); % this is boundary for PosFinal in a row
+%B = 2.5;
+%C = B/A;
+CenterLineRow = round(nx/2);
+CenterLineCol = round(ny/2);
+RatioBoundNX = 8;
+RatioBoundNY = 8;
+RowOffCenter = round(0.5*(nx/RatioBoundNX));
+ColOffCenter = round(0.5*(ny/RatioBoundNY));
+%nxa = ceil(nx /B) %this is boundary for PosZero in a line
+nxa = round(CenterLineRow-RowOffCenter);
+%nxb = ceil(nx/C); % this is boundary for PosFinal in line
+nxb = round(CenterLineRow + RowOffCenter);
+%nya = ceil(ny/B) % this is boundary for PosZero in a row
+nya = round(CenterLineCol-ColOffCenter);
+%nyb = ceil(ny/C) % this is boundary for PosFinal in a row
+nyb = round(CenterLineCol+ColOffCenter);
+
 
 %put k constant to follow the grid, these are like measurment probes
-iprobe_x=5*k;
-iprobe_y=5*k;
+iprobe_x= 5*k;
+iprobe_y= 5*k;
 %permativity constant for epoxy
 Eps_r1 = 10;  
 %permativity const for air
@@ -90,9 +101,10 @@ cputime-t;
 save potential u iu
 %---------------------------------------------------------------------------------------------------%
 %---------------------------------------------------------------------------------------------------%
-
+% 
 figure(1)
 spy(iu)
+grid on
 figure(2)
 plot(log10(abs(res_n)),'r.');
 grid on;
