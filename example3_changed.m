@@ -13,24 +13,20 @@ A= 1.5; % Ratio for H and W later
 %Nr of grids
 nx=200*k; %lines
 ny=140*k;%colums
-%Ratio for the H and W
-%B = 2.5;
-%C = B/A;
-CenterLineRow = round(nx/2);
-CenterLineCol = round(ny/2);
+
+CenterLineRow = nx/2;
+CenterLineCol = ny/2;
+
 RatioBoundNX = 8;
 RatioBoundNY = 8;
-RowOffCenter = round(0.5*(nx/RatioBoundNX));
-ColOffCenter = round(0.5*(ny/RatioBoundNY));
-%nxa = ceil(nx /B) %this is boundary for PosZero in a line
-nxa = round(CenterLineRow-RowOffCenter);
-%nxb = ceil(nx/C); % this is boundary for PosFinal in line
-nxb = round(CenterLineRow + RowOffCenter);
-%nya = ceil(ny/B) % this is boundary for PosZero in a row
-nya = round(CenterLineCol-ColOffCenter);
-%nyb = ceil(ny/C) % this is boundary for PosFinal in a row
-nyb = round(CenterLineCol+ColOffCenter);
 
+RowOffCenter = 0.5*(nx/RatioBoundNX);
+ColOffCenter = 0.5*(ny/RatioBoundNY);
+
+nxa = round(CenterLineRow-RowOffCenter);
+nxb = round(CenterLineRow + RowOffCenter);
+nya = round(CenterLineCol-ColOffCenter);
+nyb = round(CenterLineCol+ColOffCenter);
 
 %put k constant to follow the grid, these are like measurment probes
 iprobe_x= 5*k;
@@ -39,6 +35,7 @@ iprobe_y= 5*k;
 Eps_r1 = 10;  
 %permativity const for air
 Eps_r2 = 1;
+%permativity Boundaries
 Eps_r3 = (Eps_r1+Eps_r2)/2;
 %---------------------------------------------------------------------------------------------------%
                                         %Voltage,eps and Marker Matrices%
@@ -64,9 +61,9 @@ iu(nxa:nxb,nya) = -1;
 iu(nxa:nxb,nyb) = -1;
 
 %Make a eps matrix
-Eps = ones(nx,ny)*Eps_r1;
-Eps(nxa:nxb,nya:nyb)= Eps_r2;
-
+Eps = ones(nx,ny)*Eps_r1; %epoxy
+Eps(nxa:nxb,nya:nyb)= Eps_r3; %air+epoxy
+Eps(nxa+1:nxb-1,nya+1:nyb-1) = Eps_r2; %air
 %---------------------------------------------------------------------------------------------------%
 %---------------------------------------------------------------------------------------------------%
 t=cputime; 
@@ -105,6 +102,8 @@ save potential u iu
 figure(1)
 spy(iu)
 grid on
-figure(2)
-plot(log10(abs(res_n)),'r.');
-grid on;
+%set(gca,'xlim',[0,ny],'ylim',[0,nx],'ydir','reverse','GridLineStyle','none','plotboxaspectratio',[nx+1 ny+1 1]);
+set(gca, 'GridLineStyle', ':')
+ figure(2)
+ plot(log10(abs(res_n)),'r.');
+ grid on;
