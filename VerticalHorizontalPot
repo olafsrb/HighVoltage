@@ -1,0 +1,117 @@
+clear all;
+close all;
+format long;
+clc;
+%---------------------------------------------------------------------------------------------------%
+                                           %CONSTANTS%
+%---------------------------------------------------------------------------------------------------%
+
+n_iter = 10000;
+aa = 1.5;
+k= 1;
+% A= 1.5; % Ratio for H and W later
+%Nr of grids
+NY=140*k; %lines
+NX=200*k;%colums
+
+CenterLineRow = NY/2;
+CenterLineCol = NX/2;
+
+RatioBoundNX = 8;
+RatioBoundNY = 8;
+
+RowOffCenter = 0.5*(NY/RatioBoundNX);
+ColOffCenter = 0.5*(NX/RatioBoundNY);
+
+Nya = round(CenterLineRow-RowOffCenter);
+Nyb = round(CenterLineRow + RowOffCenter);
+Nxa = round(CenterLineCol-ColOffCenter);
+Nxb = round(CenterLineCol+ColOffCenter);
+%put k constant to follow the grid, these are like measurment grids(sectoins)
+iprobe_x= 5*k;
+iprobe_y= 5*k;
+%permativity constant for epoxy
+Eps_r1 = 10;  
+%permativity const for air
+Eps_r2 = 1;
+Eps_r3 = (Eps_r1+Eps_r2)/2;
+%---------------------------------------------------------------------------------------------------%
+                                        %Voltage,eps and Marker Matrices%
+%---------------------------------------------------------------------------------------------------%
+
+% voltage potentional matrix
+u=0.5*ones(NY,NX);
+
+u(1,:) = 1; % ground 
+u(NY,:)= 0; % high voltage
+ %---------------------------------------------------------------------------------------------------%
+ %                                  Horizontal and Vertical lines
+ %---------------------------------------------------------------------------------------------------%
+iu=zeros(NY,NX);
+Epsi = ones(NY,NX)*Eps_r1; % Eps_r1 = epoxy =10
+
+%---------------------------------------Vertical------------------------------------------------------------%
+
+iu(1:NY,Nxa) = -1; %vertical lines - lægri talan er ground, hærri er HV
+iu(1:NY,Nxb) = -1; % vertical lines
+
+
+
+Epsi(1:NY,Nxa)= Eps_r3; % for vertical lines
+Epsi(1:NY,Nxb) = Eps_r3;% for vertical lines
+Epsi(1:NY,Nxa+1:Nxb-1) = Eps_r2;
+
+%--------------------------------------Horizontal-------------------------------------------------------------%
+%Ev =  Eps_r1*
+
+% iu(Nya,1:NX) = -1; %Horizontal lines
+% iu(Nyb,1:NX) = -1; %horizontal lines
+% 
+% Epsi(Nya,1:NX) = Eps_r3; %Eps_r3 = air+epoxy/2
+% Epsi(Nyb,1:NX) = Eps_r3; %Eps_r3 = air+epoxy/2
+% Epsi(Nya+1:Nyb-1,1:NX) = Eps_r2;% Eps_r2 = air =1
+
+%---------------------------------------------------------------------------------------------------%
+%---------------------------------------------------------------------------------------------------%
+t=cputime; 
+it = 1;
+tol = 1;
+u0 = 1;
+while (tol >= 1e-6)  
+    for ix = 2:NY-1
+        for iy = 2:NX-1
+           if ( iu(ix,iy) == 0) 
+                 rnm = u(ix,iy)- ( u(ix+1,iy)+ u(ix-1,iy) + u(ix,iy+1) + u(ix,iy-1) )/4;
+                 
+                 u(ix,iy) = u(ix,iy) - aa*rnm;
+                 
+           end 
+            if ( iu(ix,iy) == -1)
+                u(ix,iy) = ( (Epsi(ix+1,iy))*(u(ix+1,iy)) + (Epsi(ix-1,iy))*(u(ix-1,iy)) + (Epsi(ix,iy+1))*(u(ix,iy+1)) + (Epsi(ix,iy-1))*(u(ix,iy-1)) )/( Epsi(ix+1,iy)+ Epsi(ix-1,iy)+ Epsi(ix,iy+1)+ Epsi(ix,iy-1)); %needs to be corrected to our problem at the boundaries
+                   
+            end
+  
+        end
+    end
+      u(2:NY-1,1) = u(2:NY-1,2);
+      u(2:NY-1,NX) = u(2:NY-1,NX-1); 
+   tol = abs(u(iprobe_x,iprobe_y)-u0);
+   u0 = u(iprobe_x,iprobe_y);
+   res_n(it,1)= tol;
+   it = it+1;
+   end
+
+
+
+cputime-t;
+save potential u iu
+%---------------------------------------------------------------------------------------------------%
+%---------------------------------------------------------------------------------------------------%
+% 
+figure(1)
+spy(iu)
+%grid on
+%set(gca,'xlim',[0,NX],'ylim',[0,NY],'ydir','reverse','GridLineStyle','none','plotboxaspectratio',[NX+1 NY+1 1]);
+figure(2)
+plot(log10(abs(res_n)),'r.');
+grid on;
