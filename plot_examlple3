@@ -1,0 +1,42 @@
+
+close all;clear all; clc;
+
+load('potential.mat', 'u','iu');
+%-----------------------------------------------------%
+figure(1)
+spy(iu)
+title('Spy - iu markers')
+%----------------------------------------%
+figure(2)
+surf(u)
+title('surf- Potential U')
+%----------------------------------------%
+[px,py] = gradient(u,1,1);
+figure(3)
+contour(u);
+hold on;
+quiver(-px,-py);
+title('contour- potential of U') 
+%----------------------------------------%
+figure(4)
+Ef=((px.^2+ py.^2).^0.5);
+plot(Ef(:,70));
+hold on 
+plot(u(:,70));
+title('plot E-Field Vertical')
+%----------------------------------------%
+figure(5)
+plot(Ef(100,:));
+title('plot E-Field Horizontal')
+%----------------------------------------%
+figure(6)
+contour(Ef)
+title('contour- E-field')
+%----------------------------------------%
+
+
+maxi = max(Ef(:,70))
+
+mini = min(Ef(:,70))
+
+ave = maxi/mini
