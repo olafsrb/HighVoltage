@@ -2,6 +2,7 @@
 close all;clear all; clc;
 
 load('potential.mat', 'u','iu');
+load('varCenter','CenterLineCol', 'CenterLineRow');
 %-----------------------------------------------------%
 figure(1)
 spy(iu)
@@ -12,31 +13,57 @@ surf(u)
 title('surf- Potential U')
 %----------------------------------------%
 [px,py] = gradient(u,1,1);
+%----------------------------------------%
 figure(3)
 contour(u);
 hold on;
 quiver(-px,-py);
-title('contour- potential of U') 
+title('contour- potential of U')
+%----------------------------------------%
+Ef=((px.^2+ py.^2).^0.5);
+%----------------------------------------%
+
 %----------------------------------------%
 figure(4)
-Ef=((px.^2+ py.^2).^0.5);
-plot(Ef(:,70));
-hold on 
-plot(u(:,70));
-title('plot E-Field Vertical')
-%----------------------------------------%
-figure(5)
-plot(Ef(100,:));
-title('plot E-Field Horizontal')
-%----------------------------------------%
-figure(6)
 contour(Ef)
 title('contour- E-field')
+%---------VERTICAL-------------------------------%
+
+figure(5)
+%left_color = [1 0 0];	
+%right_color = [0 0.4470 0.7410];
+%set(figure,'defaultAxesColorOrder',[left_color; right_color]);
+
+yyaxis left
+plot(u(:,CenterLineCol),'b','Linewidth',2);
+hold on 
+yyaxis right
+plot(Ef(:,CenterLineCol),'r','Linewidth',2);
+title('plot E-Field Vertical')
+legend('Voltage potential','Electric field');
+
+%-----------------Horizontal----ground to HV-------------------%
+figure(6)
+yyaxis left
+plot(u(CenterLineRow,:));
+hold on 
+yyaxis right
+plot(Ef(CenterLineRow,:),'r','Linewidth',2);
+title('plot E-Field Horizontal')
+legend('Voltage potential','Electric field')
 %----------------------------------------%
 
+% maxVertical = max(Ef(:,CenterLineCol))
+% minVertical = min(Ef(:,CenterLineCol))
+% 
+% aveVertical = maxVertical/minVertical
+% 
+% maxHorizontal = max(Ef(CenterLineRow,:))
+% minHorizontal = min(Ef(CenterLineRow,:))
+% 
+% aveHorizontal = maxHorizontal/minHorizontal
+% 
+% 
+% T = table(maxVertical,minVertical,aveVertical,maxHorizontal,minHorizontal,aveHorizontal)
 
-maxi = max(Ef(:,70))
 
-mini = min(Ef(:,70))
-
-ave = maxi/mini
