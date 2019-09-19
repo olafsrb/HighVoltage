@@ -2,15 +2,18 @@
 close all;clear all; clc;
 
 load('potential.mat', 'u','iu');
-load('varCenter','CenterLineCol', 'CenterLineRow');
+load('varCenter','CenterLineCol', 'CenterLineRow','nx','ny');
 %-----------------------------------------------------%
 figure(1)
-spy(iu)
-title('Spy - iu markers')
+spy(iu);
+
+ylabel('Nx');
+xlabel('Ny');
+title('Spy - Boundary (iu)')
 %----------------------------------------%
 figure(2)
 surf(u)
-title('surf- Potential U')
+title('Electric Potential')
 %----------------------------------------%
 [px,py] = gradient(u,1,1);
 %----------------------------------------%
@@ -18,7 +21,7 @@ figure(3)
 contour(u);
 hold on;
 quiver(-px,-py);
-title('contour- potential of U')
+title('Electric Potential')
 %----------------------------------------%
 Ef=((px.^2+ py.^2).^0.5);
 %----------------------------------------%
@@ -26,44 +29,63 @@ Ef=((px.^2+ py.^2).^0.5);
 %----------------------------------------%
 figure(4)
 contour(Ef)
-title('contour- E-field')
+title('Electric-field')
 %---------VERTICAL-------------------------------%
 
 figure(5)
 %left_color = [1 0 0];	
 %right_color = [0 0.4470 0.7410];
 %set(figure,'defaultAxesColorOrder',[left_color; right_color]);
-
 yyaxis left
-plot(u(:,CenterLineCol),'b','Linewidth',2);
+plot(u(:,CenterLineCol),'b.','Linewidth',2);
 hold on 
 yyaxis right
 plot(Ef(:,CenterLineCol),'r','Linewidth',2);
-title('plot E-Field Vertical')
-legend('Voltage potential','Electric field');
+%yline(1,'m','Linewidth',4);
+%yline(0.0,'g','Linewidth',6);
+title('Electric potential & Electric field through center(GND-HV') % Vertical
+legend('E-Potential','E-Field');
 
-%-----------------Horizontal----ground to HV-------------------%
+%-----------------Horizontal--------------------%
 figure(6)
 yyaxis left
-plot(u(CenterLineRow,:));
+plot(u(CenterLineRow,:),'c.','Linewidth',2);
 hold on 
 yyaxis right
-plot(Ef(CenterLineRow,:),'r','Linewidth',2);
-title('plot E-Field Horizontal')
-legend('Voltage potential','Electric field')
+plot(Ef(CenterLineRow,:),'m','Linewidth',2);
+title('Electric potential & Electric field through center(perpend to E-field')
+legend('E-Potential','E-Field') %Horizontal
+
 %----------------------------------------%
 
-% maxVertical = max(Ef(:,CenterLineCol))
-% minVertical = min(Ef(:,CenterLineCol))
-% 
-% aveVertical = maxVertical/minVertical
-% 
-% maxHorizontal = max(Ef(CenterLineRow,:))
-% minHorizontal = min(Ef(CenterLineRow,:))
-% 
-% aveHorizontal = maxHorizontal/minHorizontal
-% 
-% 
-% T = table(maxVertical,minVertical,aveVertical,maxHorizontal,minHorizontal,aveHorizontal)
+
+%----------------------------------------%
+maxVertEF = max(Ef(:,CenterLineCol));
+minVertEF = min(Ef(:,CenterLineCol));
+ 
+RatioVerticalEF = maxVertEF/minVertEF;
+ 
+maxHorizEF = max(Ef(CenterLineRow,:));
+minHorizEF = min(Ef(CenterLineRow,:));
+ 
+RatioHorizontalEF = maxHorizEF/minHorizEF;
+
+maxVertU = max(u(:,CenterLineCol));
+minVertU = min(u(:,CenterLineCol));
+ 
+RatioVertU = maxVertEF/minVertEF;
+ 
+maxHorizU = max(u(CenterLineRow,:));
+minHorizU = min(u(CenterLineRow,:));
+
+RatioHorizontalU = maxHorizU/minHorizU;
+
+
+maxVOLTS = max(u(:,CenterLineCol))
+
+%----------------------------------------%
+T1 = table(maxVertEF,minVertEF,RatioVerticalEF,maxHorizEF,minHorizEF,RatioHorizontalEF)
+
+T2= table(maxVertU, minVertU,RatioVertU, maxHorizU,minHorizU,RatioHorizontalU)
 
 
