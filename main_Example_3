@@ -10,14 +10,15 @@ n_iter = 10000;
 aa = 1.5;
 k= 1;
 %Nr of grids
+
 nx=200*k; %lines
 ny=150*k;%colums
 
 CenterLineRow = nx/2;
 CenterLineCol = ny/2;
 
-RatioWH = 8;
-RatioBoundNX = RatioWH;
+RatioWH = 10;
+RatioBoundNX = RatioWH*1;
 RatioBoundNY = RatioWH*1;
 
 RowOffCenter = 0.5*(nx/RatioBoundNX);
@@ -27,6 +28,9 @@ nxa = round(CenterLineRow-RowOffCenter);
 nxb = round(CenterLineRow + RowOffCenter);
 nya = round(CenterLineCol-ColOffCenter);
 nyb = round(CenterLineCol+ColOffCenter);
+
+deltanxx = nxa-nxb;
+deltanyy = nya-nyb;
 
 %put k constant to follow the grid, these are like measurment probes
 iprobe_x= 5*k;
@@ -97,6 +101,7 @@ end;
 
 cputime-t;
 save potential u iu
+save('VarCenter','CenterLineRow' ,'CenterLineCol','nx','ny');
 %---------------------------------------------------------------------------------------------------%
 %---------------------------------------------------------------------------------------------------%
 % 
