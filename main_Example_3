@@ -11,26 +11,36 @@ aa = 1.5;
 k= 1;
 %Nr of grids
 
-nx=200*k; %lines
+nx=200*k; %rows
 ny=150*k;%colums
-
-CenterLineRow = nx/2;
-CenterLineCol = ny/2;
+%                  HV->u(1,:)
+%                COLUMNS
+%              1 2 3 ...m
+%       R  1 | nxa -----
+%       O  2 |    |     | 
+% NX    W  3 |    |     |
+%       S  . | nxb -----
+%          n |   nya    nyb
+%             ------------>
+%                 NY
+%                 GND -> u(nx,:)
+CenterLineRow = nx/2; % centerline of nx side
+CenterLineCol = ny/2; % centerline of ny side
 
 RatioWH = 10;
-RatioBoundNX = RatioWH*1;
-RatioBoundNY = RatioWH*1;
+RatioBoundNX = RatioWH*1; %ratio of nx towards grid and then aspect ratio
+RatioBoundNY = RatioWH*1; % ratio of ny towards grid and then aspect ratio
 
-RowOffCenter = 0.5*(nx/RatioBoundNX);
-ColOffCenter = 0.5*(ny/RatioBoundNY);
+RowOffCenter = 0.5*(nx/RatioBoundNX);% for always putting the nx side of box in center off the row
+ColOffCenter = 0.5*(ny/RatioBoundNY); % for always putting ny sides of box in center off col
 
-nxa = round(CenterLineRow-RowOffCenter);
-nxb = round(CenterLineRow + RowOffCenter);
-nya = round(CenterLineCol-ColOffCenter);
-nyb = round(CenterLineCol+ColOffCenter);
+nxa = round(CenterLineRow-RowOffCenter); %nxa is the "top" witdh side of the box off center
+nxb = round(CenterLineRow + RowOffCenter); %nxa is the "bottom" witdh side of the box off center
+nya = round(CenterLineCol-ColOffCenter); %nya is the "first" height side of the box off center
+nyb = round(CenterLineCol+ColOffCenter); %nyb is the "2nd" height side of the box off center
 
-deltanxx = nxa-nxb;
-deltanyy = nya-nyb;
+DELTANXX = -(nxa-nxb); % just for calc and observation not important
+DELTANYY = -(nya-nyb); % just for calc and observation not important
 
 %put k constant to follow the grid, these are like measurment probes
 iprobe_x= 5*k;
@@ -63,7 +73,7 @@ iu(nxa:nxb,nyb) = -1;
 
 %iu(CenterLineRow,:) =-1;
 
-%iu(:,CenterLineCol) = -1;
+%iu(:,CenterLineCol) = -1; %line through HV and GND
 
 %Make a eps matrix
 Eps = ones(nx,ny)*Eps_r1; %epoxy
@@ -107,6 +117,11 @@ save('VarCenter','CenterLineRow' ,'CenterLineCol','nx','ny');
 % 
 figure(1)
 spy(iu)
+hold on
+%yline(200,'Linewidth',5,'-','Threshold');
+yline(2,'-','HV','Linewidth',2);
+yline(200,'-','GND','Linewidth',2);
+
 grid on
 %set(gca,'xlim',[0,ny],'ylim',[0,nx],'ydir','reverse','GridLineStyle','none','plotboxaspectratio',[nx+1 ny+1 1]);
 set(gca, 'GridLineStyle', ':')
