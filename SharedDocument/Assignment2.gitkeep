@@ -1,0 +1,114 @@
+close all; clear all; clc;
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%                       CONSTANTS
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+T_max = 90 +273.15;
+T_0 = 20 + 273.15;
+T2 = T_max;
+T1 = T_0;
+Temp_delta = T2 - T1;
+
+U0 = 127 * 10^3;
+mu_0 = 4 * pi * 10^-7;% Vacuum permeability h / m constant mu_0
+f0 = 50;% hz
+eps_zero = 8.85*10^(-12); % F/m
+
+nominal_cross_section = 800 / 1000000; % given on data sheet
+Res_dc = 0.0221 / 1000; % giving from a data sheet it in ohms/km
+sigma = 1 / (Res_dc * nominal_cross_section); %s/m copper conductivity
+
+%%%%%%%%%%%%%%%%%%%%%%%%% Copper
+D_copper =  34/1000;
+r_copper = D_copper / 2; %17mm
+
+C_thermal_null_copper = 3.4*10^6 * pi * (r_copper^2) /1000; %Use for the first I source in simulation.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%    XLPE     %%%%%%%%%%%%%%%%%%%%%%%%%
+
+eps_XL = 3.0; % from a table
+tan_delta_XL = 0.005; % from a table
+
+D_XL = 83.7 / 1000; % from data sheet 
+r_XL_outer = D_XL / 2; % from data sheet - 41,8mm
+r_XL_inner = r_XL_outer - (23/1000); % from data sheet also - 18,8mm
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%   PE     %%%%%%%%%%%%%%%%%%%%%%%%%
+
+eps_PE = 2.3; % from a table                      	
+tan_delta_PE = 0.001; % from a table
+
+
+D_PE = (102.3 - 0.5 -5.5 )/ (1000); % from data sheet 
+r_PE_outer = D_PE / 2; % from data sheet - 48,1mm
+r_PE_inner = r_XL_outer; % from data sheet - 41,8mm
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%   BOTH XLPE and PLE   %%%%%%%%%%%%%%%%%%%%%%%%%%
+
+thermal_resitivity = 3.5; % from a table same for PE and XLPE
+k = 1 / thermal_resitivity; % k is thermal conductivity for XLPE and PE
+
+
+ro_ri_ratio_XL = r_XL_outer / r_XL_inner;
+ro_ri_ratio_PE = r_PE_outer / r_PE_inner;
+
+Cv = (2 * 10^6) /1000;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%                       Formulas 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+skin_depth = 1 / ( sqrt( pi * mu_0 * f0 * sigma ) ); % will diminish if dwn stairs values are bigger as freq
+
+r_center_skinD = (r_copper) - (skin_depth / 2); % radius to middle skin depth
+
+Skin_effect = (2 * pi * r_center_skinD * skin_depth) - (pi * skin_depth^2); % affected area of skin depth
+
+Res_skin = 1 / (  sigma * Skin_effect); % skin effect resistance
+
+Res_ac = sqrt(Res_dc^2 + Res_skin^2); % Ac resistance
+
+%%%%%%%%%%%%%%%%%%%%%%%%%     XLPE     %%%%%%%%%%%%%%%%%%%%%%%%%
+
+C_XL = (2 * pi * eps_zero * eps_XL ) / (log(ro_ri_ratio_XL));
+
+Wd_XL = 2 * pi * f0 * C_XL * U0^2 * tan_delta_XL; 
+
+C_XL_thermal = Cv *pi * (r_XL_outer^2 - r_XL_inner^2); 
+
+
+Res_th = ( 1 /(2* pi * k ) ) * ( log( ro_ri_ratio_XL) );
+
+I_XL = sqrt((Temp_delta - ( 0.5 * Wd_XL * Res_th )) / ( Res_ac * Res_th) );
+
+I_thermal_XL = I_XL^2 * Res_ac; % W = I^2*R 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%    PE     %%%%%%%%%%%%%%%%%%%%%%%%%
+
+C_PE = (2 * pi * eps_zero * eps_PE ) / (log(ro_ri_ratio_PE));
+
+Wd_PE = 2 * pi * f0 * C_PE * U0^2 * tan_delta_PE;
+
+C_PE_thermal = Cv * pi * (r_PE_outer^2 - r_PE_inner^2);
+
+
+
+%%%%%%????????????????????????????????????????????????????????????
+Res_th_PE = ( 1 /(2* pi * k ) ) * ( log( ro_ri_ratio_PE) );
+
+I_PE = sqrt((Temp_delta - ( 0.5 * Wd_PE * Res_th_PE )) / ( Res_ac * Res_th_PE) );
+
+Ithermal_PE = I_PE^2 * Res_ac;
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%   TED    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+N = 2;
+M = 1;
+
+RC = (Res_th * C_thermal_null_copper / 2 );
+
+NM = ( N^2 - ( N-M)^2);
+
+Ted = RC * NM;
+
