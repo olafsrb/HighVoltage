@@ -22,7 +22,7 @@ sigma = 1 / (Res_dc * nominal_cross_section); %s/m copper conductivity
 D_copper =  34/1000;
 r_copper = D_copper / 2; %17mm
 
-C_thermal_null_copper = 3.4*10^6 * pi * (r_copper^2) /1000; %Use for the first I source in simulation.
+C_copper_thermal = 3.4*10^6 * pi * (r_copper^2); %Use for the first I source in simulation.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%    XLPE     %%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -52,7 +52,7 @@ k = 1 / thermal_resitivity; % k is thermal conductivity for XLPE and PE
 ro_ri_ratio_XL = r_XL_outer / r_XL_inner;
 ro_ri_ratio_PE = r_PE_outer / r_PE_inner;
 
-Cv = (2 * 10^6) /1000;
+Cv = (2 * 10^6);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %                       Formulas 
@@ -77,9 +77,9 @@ Wd_XL = 2 * pi * f0 * C_XL * U0^2 * tan_delta_XL;
 C_XL_thermal = Cv *pi * (r_XL_outer^2 - r_XL_inner^2); 
 
 
-Res_th = ( 1 /(2* pi * k ) ) * ( log( ro_ri_ratio_XL) );
+Res_th_XL = ( 1 /(2* pi * k ) ) * ( log( ro_ri_ratio_XL) );
 
-I_XL = sqrt((Temp_delta - ( 0.5 * Wd_XL * Res_th )) / ( Res_ac * Res_th) );
+I_XL = sqrt((Temp_delta - ( 0.5 * Wd_XL * Res_th_XL )) / ( Res_ac * Res_th_XL) );
 
 I_thermal_XL = I_XL^2 * Res_ac; % W = I^2*R 
 
@@ -94,19 +94,22 @@ C_PE_thermal = Cv * pi * (r_PE_outer^2 - r_PE_inner^2);
 
 
 %%%%%%????????????????????????????????????????????????????????????
+
+
 Res_th_PE = ( 1 /(2* pi * k ) ) * ( log( ro_ri_ratio_PE) );
 
-I_PE = sqrt((Temp_delta - ( 0.5 * Wd_PE * Res_th_PE )) / ( Res_ac * Res_th_PE) );
+I_PE = sqrt((Temp_delta - ( 0.5 * Wd_PE * (Res_th_PE+ Res_th_XL) )) / ( Res_ac * (Res_th_PE+Res_th_XL)) );
 
 Ithermal_PE = I_PE^2 * Res_ac;
 
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%   TED    %%%%%%%%%%%%%%%%%%%%%%%%
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%   TED    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%
 N = 2;
 M = 1;
 
-RC = (Res_th * C_thermal_null_copper / 2 );
+RC = ((Res_th_XL + Res_th_PE) * (C_XL_thermal + C_copper_thermal)) / 2 ;
 
 NM = ( N^2 - ( N-M)^2);
 
