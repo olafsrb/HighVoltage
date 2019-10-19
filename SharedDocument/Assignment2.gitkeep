@@ -18,46 +18,42 @@ nominal_cross_section = 800 / 1000000; % given on data sheet
 Res_dc = 0.0221 / 1000; % giving from a data sheet it in ohms/km
 sigma = 1 / (Res_dc * nominal_cross_section); %s/m copper conductivity
 
-%%%%%%%%%%%%%%%%%%%%%%%%% Copper
+
+%%%%%%%%%%%%%%%%%%%%%%%%%    Copper   %%%%%%%%%%%%%%%%%%%%%%%%%
 D_copper =  34/1000;
 r_copper = D_copper / 2; %17mm
 
-C_copper_thermal = 3.4*10^6 * pi * (r_copper^2); %Use for the first I source in simulation.
-
 %%%%%%%%%%%%%%%%%%%%%%%%%    XLPE     %%%%%%%%%%%%%%%%%%%%%%%%%
+
+D_XL = 83.7 / 1000; % from data sheet Diameter
+r_XL_outer = D_XL / 2; % from data sheet - 41,8mm %outer
+r_XL_inner = r_XL_outer - (23/1000); % from data sheet also - 18,8mm %inner
 
 eps_XL = 3.0; % from a table
 tan_delta_XL = 0.005; % from a table
 
-D_XL = 83.7 / 1000; % from data sheet 
-r_XL_outer = D_XL / 2; % from data sheet - 41,8mm
-r_XL_inner = r_XL_outer - (23/1000); % from data sheet also - 18,8mm
+ro = r_XL_outer;
+ri = r_XL_inner;
+rx = sqrt(ro *ri); % use to cut in half.
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%   PE     %%%%%%%%%%%%%%%%%%%%%%%%%
-
+%%%%%%%%%%%%%%%%%%%%%%%%%%%    PE     %%%%%%%%%%%%%%%%%%%%%%%%%
 eps_PE = 2.3; % from a table                      	
 tan_delta_PE = 0.001; % from a table
 
-
-D_PE = (102.3 - 0.5 -5.5 )/ (1000); % from data sheet 
+D_PE = (102.3 - 0.5 -5.5 )/ (1000); % from data sheet Diameter
 r_PE_outer = D_PE / 2; % from data sheet - 48,1mm
-r_PE_inner = r_XL_outer; % from data sheet - 41,8mm
+r_PE_inner = ro; % from data sheet - 41,8mm
+
+r_PE_ratio =r_PE_outer / r_PE_inner;% for calculation in log later
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%   BOTH XLPE and PLE   %%%%%%%%%%%%%%%%%%%%%%%%%%
-
 thermal_resitivity = 3.5; % from a table same for PE and XLPE
 k = 1 / thermal_resitivity; % k is thermal conductivity for XLPE and PE
-
-
-ro_ri_ratio_XL = r_XL_outer / r_XL_inner;
-ro_ri_ratio_PE = r_PE_outer / r_PE_inner;
-
-Cv = (2 * 10^6);
+Cv = (2 * 10^6) / 1000;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %                       Formulas 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 skin_depth = 1 / ( sqrt( pi * mu_0 * f0 * sigma ) ); % will diminish if dwn stairs values are bigger as freq
 
 r_center_skinD = (r_copper) - (skin_depth / 2); % radius to middle skin depth
@@ -68,48 +64,53 @@ Res_skin = 1 / (  sigma * Skin_effect); % skin effect resistance
 
 Res_ac = sqrt(Res_dc^2 + Res_skin^2); % Ac resistance
 
-%%%%%%%%%%%%%%%%%%%%%%%%%     XLPE     %%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%    Cu   %%%%%%%%%%%%%%%%%%%%%%%%%
 
-C_XL = (2 * pi * eps_zero * eps_XL ) / (log(ro_ri_ratio_XL));
+C_copper_thermal = 3.4*10^6 * pi * (r_copper^2); %Use for the first I source in simulation.
 
-Wd_XL = 2 * pi * f0 * C_XL * U0^2 * tan_delta_XL; 
+%%%%%%%%%%%%%%%%%%%%%%%%%     XLPE from inner to outer  %%%%%%%%%%%%%%%%%%%%%%%%%
+C = (2 * pi * eps_zero * eps_XL ) / (log(ro/ri));
+Wd = 2 * pi * f0 * C * U0^2 * tan_delta_XL ;
+Res_th = ( 1 /(2* pi * k ) ) * ( log( ro/ri) );
+I = sqrt((Temp_delta - ( 0.5 * Wd * Res_th )) / ( Res_ac * Res_th) );
 
-C_XL_thermal = Cv *pi * (r_XL_outer^2 - r_XL_inner^2); 
+I_thermal_XL = I^2 * Res_ac; % W = I^2*R 
+C_XL_thermal = Cv *pi * (ro^2 - ri^2); 
 
+%%%%%%%%%%%%%%% Cut 1st layer in XLPE %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+C_2 = (2 * pi * eps_zero * eps_XL ) / (log(rx / ri));
+Wd2 = 2 * pi * f0 * C_2 * U0^2 * tan_delta_XL;
+Res_th2 = ( 1 /(2* pi * k ) ) * (log(rx/ri));
+I2 = sqrt((Temp_delta - ( 0.5 * Wd2 * Res_th2 )) / ( Res_ac * Res_th2) );
 
-Res_th_XL = ( 1 /(2* pi * k ) ) * ( log( ro_ri_ratio_XL) );
+I_thermal_XL2 = I2^2 * Res_ac; % W = I^2*R 
+C2_XL_thermal = Cv *pi * (rx^2 - ri^2); 
 
-I_XL = sqrt((Temp_delta - ( 0.5 * Wd_XL * Res_th_XL )) / ( Res_ac * Res_th_XL) );
+%%%%%%%%%%%%%%% Cut 2nd layer in XLPE %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+C_3 = (2 * pi * eps_zero * eps_XL ) / (log(ro / rx));
+Wd3 = 2 * pi * f0 * C_3 * U0^2 * tan_delta_XL;
+Res_th3 = ( 1 /(2* pi * k ) ) * (log(ro/rx));
+I3 = sqrt((Temp_delta - ( 0.5 * Wd3 * Res_th3 )) / ( Res_ac * Res_th3) );
 
-I_thermal_XL = I_XL^2 * Res_ac; % W = I^2*R 
+I_thermal_XL3 = I3^2 * Res_ac; % W = I^2*R 
+C3_XL_thermal = Cv *pi * (ro^2 - rx^2); 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%    PE     %%%%%%%%%%%%%%%%%%%%%%%%%
 
-C_PE = (2 * pi * eps_zero * eps_PE ) / (log(ro_ri_ratio_PE));
+C_PE = (2 * pi * eps_zero * eps_PE ) / (log(r_PE_ratio));
 
 Wd_PE = 2 * pi * f0 * C_PE * U0^2 * tan_delta_PE;
 
 C_PE_thermal = Cv * pi * (r_PE_outer^2 - r_PE_inner^2);
 
+Res_th_PE = ( 1 /(2* pi * k ) ) * ( log( r_PE_ratio) );
 
 
-%%%%%%????????????????????????????????????????????????????????????
-
-
-Res_th_PE = ( 1 /(2* pi * k ) ) * ( log( ro_ri_ratio_PE) );
-
-I_PE = sqrt((Temp_delta - ( 0.5 * Wd_PE * (Res_th_PE+ Res_th_XL) )) / ( Res_ac * (Res_th_PE+Res_th_XL)) );
-
-Ithermal_PE = I_PE^2 * Res_ac;
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%   TED    %%%%%%%%%%%%%%%%%%%%%%%%
-
-%%%%%%%%%%%%
-N = 2;
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%   TED delay time    %%%%%%%%%%%%%%%%%%%%%%%%
+N = 3;
 M = 1;
 
-RC = ((Res_th_XL + Res_th_PE) * (C_XL_thermal + C_copper_thermal)) / 2 ;
+RC = (Res_th2*4 + Res_th_PE*2) * ((C_copper_thermal + C_XL_thermal + C_PE))/1000 / 2 ;
 
 NM = ( N^2 - ( N-M)^2);
 
