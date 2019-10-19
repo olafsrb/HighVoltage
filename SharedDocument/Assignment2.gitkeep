@@ -66,7 +66,7 @@ Res_ac = sqrt(Res_dc^2 + Res_skin^2); % Ac resistance
 
 %%%%%%%%%%%%%%%%%%%%%%%%%    Cu   %%%%%%%%%%%%%%%%%%%%%%%%%
 
-C_copper_thermal = 3.4*10^6 * pi * (r_copper^2); %Use for the first I source in simulation.
+C_copper_thermal = 3.4*10^3 * pi * (r_copper^2); %Use for the first I source in simulation.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%     XLPE from inner to outer  %%%%%%%%%%%%%%%%%%%%%%%%%
 C = (2 * pi * eps_zero * eps_XL ) / (log(ro/ri));
